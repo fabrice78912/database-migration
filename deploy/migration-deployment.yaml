@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: migration-deployment
+  labels:
+    app: migration
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: migration
+  template:
+    metadata:
+      labels:
+        app: migration
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - migration
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: migration
+        image: migration-app:latest
+        imagePullPolicy: Never
+        env:
+        - name: MARIADB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: migration-config
+              key: MARIADB_URL  # Referring to ConfigMap for the PostgreSQL URL
+        - name: MARIADB_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secret
+              key: MARIADB_DATABASE    # The PostgreSQL database name
+        - name: MARIADB_ROOT_USER
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secret
+              key: MARIADB_ROOT_USER  # Referring to the Secret for the PostgreSQL user
+        - name: MARIADB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secret
+              key: MARIADB_ROOT_PASSWORD  # Referring to the Secret for the PostgreSQL password
+        - name: DB_HOST
+          value: mariadb-service
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secret
+              key: MARIADB_DATABASE
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: migration-service
+spec:
+  type: NodePort  # ✅ Corrigé ici
+  selector:
+    app: migration
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 30090  # ✅ Exposition fixe sur le port 30080

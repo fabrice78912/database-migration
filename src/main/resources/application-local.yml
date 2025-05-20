@@ -1,13 +1,23 @@
-spring:
-  datasource:
-    url: jdbc:mariadb://localhost:33067/magasin
-    username: root
-    password: root
-    driver-class-name: org.mariadb.jdbc.Driver
+#spring:
+#  datasource:
+#    url: ${DB_URL:jdbc:mariadb://localhost:3306/magasin}
+#    username: ${DB_USERNAME:root}
+#    password: ${DB_PASSWORD:root}
+#    driver-class-name: org.mariadb.jdbc.Driver
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: none
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.MariaDBDialect
 
-  jpa:
-    hibernate:
-      ddl-auto: none
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MariaDBDialect
+
+
+#spring.datasource.url=jdbc:mariadb://${DB_HOST}:${DB_PORT}/${DB_NAME}
+#spring.datasource.username=${MARIADB_ROOT_USER}
+#spring.datasource.password=${MARIADB_ROOT_PASSWORD}
+#spring.datasource.driver-class-name=org.mariadb.jdbc.Driver
+#
+#spring.jpa.hibernate.ddl-auto=none
+#spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MariaDBDialect
