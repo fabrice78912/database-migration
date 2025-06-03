@@ -14,7 +14,7 @@ import java.util.List;
 public interface ProductRepo extends JpaRepository<Product, Long> {
 
     @Query(value = """
-    SELECT c.nom AS nameClient, c.email, 
+    SELECT c.nom AS nameClient, c.email,
            p.id AS productId, p.name_product AS nameProduct, p.code_product AS codeProduct,
            ap.quantity
     FROM client c
@@ -23,6 +23,4 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     WHERE c.id = :clientId
 """, nativeQuery = true)
     List<ClientProductDTO> findClientProductsByClientId(@Param("clientId") Long clientId);
-
-
 }
