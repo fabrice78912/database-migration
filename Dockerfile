@@ -1,16 +1,31 @@
+# =========================
+# STEP 1: Build avec Maven
+# =========================
+FROM maven:3.8.3-openjdk-17-slim AS builder
 
-# Step 1: Builder le projet avec maven
-FROM maven:3.8.3-openjdk-17-slim AS maven-builder
 WORKDIR /app
-COPY . /app
-RUN mvn -f pom.xml clean package
 
-# Step 2: Copier et lancer le .jar file
-FROM eclipse-temurin:17-jre
+# Copie uniquement le pom pour profiter du cache Docker
+COPY pom.xml .
+
+# Copie le code source
+COPY src ./src
+
+# Build le projet et générer le jar, sans tests pour gagner du temps
+RUN mvn clean package -DskipTests
+
+# =========================
+# STEP 2: Runtime Distroless
+# =========================
+FROM gcr.io/distroless/java17-debian11
+
 WORKDIR /app
-COPY --from=maven-builder ./app/target/migration-app.jar .
 
+# Copier uniquement le jar construit depuis l'étape builder
+COPY --from=builder /app/target/migration-app.jar .
+
+# Expose le port utilisé par l'application
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "migration-app.jar"]
-CMD ["tail", "-f", "/dev/null"]
+# Commande de démarrage
+ENTRYPOINT ["java","-jar","migration-app.jar"]

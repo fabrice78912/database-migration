@@ -2,6 +2,8 @@ package com.example.databese_migration.web;
 
 import com.example.databese_migration.entities.Product;
 import com.example.databese_migration.entities.dto.ClientProductDTO;
+import com.example.databese_migration.payload.ApiResponse;
+import com.example.databese_migration.repo.ClientRepository;
 import com.example.databese_migration.service.PdfReportService;
 import com.example.databese_migration.service.ProductService;
 import java.util.Collections;
@@ -19,34 +21,28 @@ import org.springframework.web.bind.annotation.*;
         private final ProductService productService;
         private final PdfReportService pdfReportService;
 
-        public ProductController(ProductService productService, PdfReportService pdfReportService) {
+        public ProductController(ProductService productService, PdfReportService pdfReportService, ClientRepository clientRepository) {
             this.productService = productService;
             this.pdfReportService = pdfReportService;
         }
 
 
         @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-        public ResponseEntity<List<Product>> getAllProducts(@RequestParam(value = "name", required=false) String name , @RequestParam(value = "code", required=false) String code) {
-            return new ResponseEntity<>(productService.getAllProducts(name,code), HttpStatus.OK);
+        public ResponseEntity<ApiResponse<List<Product>>> getAllProducts(@RequestParam(value = "name", required=false) String name , @RequestParam(value = "code", required=false) String code) {
+            List<Product> productResponseDtos  = productService.getAllProducts(name,code);
+            return ResponseEntity.ok(ApiResponse.success("Produits trouvés", productResponseDtos, HttpStatus.OK.value()));
         }
 
+    @GetMapping(value = "/client/{clientId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<List<ClientProductDTO>>> getClientProducts(@PathVariable Long clientId) {
+        ApiResponse<List<ClientProductDTO>> response = productService.getClientProducts(clientId);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
 
-        //@GetMapping("/client/{clientId}")
-        @GetMapping(value = "/client/{clientId}", produces = MediaType.APPLICATION_JSON_VALUE)
-        public ResponseEntity<List<ClientProductDTO>> getClientProducts(@PathVariable Long clientId) {
-            return new ResponseEntity<>(productService.getProductsByClientId(clientId), HttpStatus.OK);
-        }
-
-        @GetMapping("/client/")
-        public ResponseEntity<List<ClientProductDTO>> getClientProductsWithoutId() {
+    @GetMapping(value = "/client", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<ClientProductDTO>> getClientProductsWithoutId() {
             return new ResponseEntity<>(Collections.emptyList(), HttpStatus.OK);
         }
-
-        /*@GetMapping("/client")
-        public ResponseEntity<List<ClientProductDTO>> getClientProducts(@RequestParam(required = false) Long clientId) {
-            return new ResponseEntity<>(productService.getProductsByClientId(clientId), HttpStatus.OK);
-        }*/
-
 
         @GetMapping("/api/pdf")
         public ResponseEntity<byte[]> getFacture(@RequestParam(value = "name", required=false) String name , @RequestParam(value = "code", required=false) String code) throws Exception {
@@ -59,7 +55,5 @@ import org.springframework.web.bind.annotation.*;
                     .contentType(MediaType.APPLICATION_PDF)
                     .body(pdf);
         }
-
-
     }
 
