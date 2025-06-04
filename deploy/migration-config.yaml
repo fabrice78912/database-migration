@@ -3,4 +3,7 @@ kind: ConfigMap
 metadata:
   name: migration-config
 data:
-  MARIADB_URL: jdbc:mariadb://mariadb-service:3306/magasin # Internal URL for mariaDB service
+  MARIADB_URL: jdbc:mariadb://mariadb-service.default.svc.cluster.local:3306/magasin?createDatabaseIfNotExist=true # Internal URL for mariaDB service
+  50-server.cnf: |
+    [mysqld]
+    bind-address = 0.0.0.0

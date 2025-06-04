@@ -27,6 +27,10 @@ spec:
       containers:
       - name: mariadb
         image: mariadb:latest
+        volumeMounts:
+          - name: mariadb-config-volume
+            mountPath: /etc/mysql/mariadb.conf.d/50-server.cnf
+            subPath: 50-server.cnf
         env:
         - name: MARIADB_DATABASE
           valueFrom:
@@ -40,6 +44,13 @@ spec:
               key: MARIADB_ROOT_PASSWORD
         ports:
         - containerPort: 3306
+      volumes:
+        - name: mariadb-config-volume
+          configMap:
+            name: migration-config
+            items:
+              - key: 50-server.cnf
+                path: 50-server.cnf
 ---
 apiVersion: v1
 kind: Service
