@@ -2,10 +2,16 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: migration-deployment
+  namespace: dev
   labels:
     app: migration
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: migration
@@ -17,60 +23,95 @@ spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app
-                operator: In
-                values:
-                - migration
-            topologyKey: "kubernetes.io/hostname"
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - migration
+              topologyKey: "kubernetes.io/hostname"
       containers:
-      - name: migration
-        image: migration-app:latest
-        imagePullPolicy: Never
-        env:
-        - name: MARIADB_URL
-          valueFrom:
-            configMapKeyRef:
-              name: migration-config
-              key: MARIADB_URL  # Referring to ConfigMap for the PostgreSQL URL
-        - name: MARIADB_DATABASE
-          valueFrom:
-            secretKeyRef:
-              name: mariadb-secret
-              key: MARIADB_DATABASE    # The PostgreSQL database name
-        - name: MARIADB_ROOT_USER
-          valueFrom:
-            secretKeyRef:
-              name: mariadb-secret
-              key: MARIADB_ROOT_USER  # Referring to the Secret for the PostgreSQL user
-        - name: MARIADB_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mariadb-secret
-              key: MARIADB_ROOT_PASSWORD  # Referring to the Secret for the PostgreSQL password
-        - name: DB_HOST
-          value: mariadb-service
-        - name: DB_PORT
-          value: "3306"
-        - name: DB_NAME
-          valueFrom:
-            secretKeyRef:
-              name: mariadb-secret
-              key: MARIADB_DATABASE
-        ports:
-        - containerPort: 8080
+        - name: migration
+          image: migration-app:v4
+          imagePullPolicy: Never
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          env:
+            - name: MARIADB_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: migration-config
+                  key: MARIADB_URL
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: migration-config
+                  key: MARIADB_URL
+            - name: MARIADB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-secret
+                  key: MARIADB_DATABASE
+            - name: MARIADB_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-secret
+                  key: MARIADB_ROOT_USER
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-secret
+                  key: MARIADB_ROOT_PASSWORD
+            - name: DB_HOST
+              value: mariadb-service.dev
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-secret
+                  key: MARIADB_DATABASE
+          ports:
+            - containerPort: 8080
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: migration-service
+  namespace: dev
 spec:
-  type: NodePort  # ✅ Corrigé ici
+  type: NodePort
   selector:
     app: migration
   ports:
     - protocol: TCP
       port: 8080
       targetPort: 8080
-      nodePort: 30090  # ✅ Exposition fixe sur le port 30080
+      nodePort: 30090
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: migration-hpa
+  namespace: dev
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: migration-deployment
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80

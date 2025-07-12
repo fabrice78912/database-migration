@@ -7,7 +7,7 @@ services:
     environment:
       MARIADB_ROOT_PASSWORD: root
     ports:
-      - "33067:3306"
+      - "3306:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./scripts:/docker-entrypoint-initdb.d  # monte les scripts SQL ici

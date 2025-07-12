@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="facture"
+              pageWidth="595"
+              pageHeight="842"
+              columnWidth="555"
+              leftMargin="20"
+              rightMargin="20"
+              topMargin="20"
+              bottomMargin="20"
+              uuid="123e4567-e89b-12d3-a456-426614174000">
+
+    <!-- Styles pour alternance -->
+    <style name="EvenRow" mode="Opaque" backcolor="#E0F7FA"/>
+    <style name="OddRow" mode="Opaque" backcolor="#FFFFFF"/>
+
+    <!-- Style titre bleu ciel -->
+    <style name="titleStyle" fontName="Arial" fontSize="22" isBold="true" forecolor="#00BCD4"/>
+
+    <!-- Paramètres -->
+    <parameter name="clientName" class="java.lang.String"/>
+    <parameter name="tel" class="java.lang.String"/>
+    <parameter name="logoPath" class="java.io.InputStream"/>
+
+    <!-- Champs -->
+    <field name="codeProduct" class="java.lang.String"/>
+    <field name="name" class="java.lang.String"/>
+    <field name="price" class="java.math.BigDecimal"/>
+
+    <!-- Variables -->
+    <variable name="rowStyle" class="java.lang.String" calculation="System">
+        <variableExpression><![CDATA[$V{REPORT_COUNT} % 2 == 0 ? "EvenRow" : "OddRow"]]></variableExpression>
+    </variable>
+
+    <!-- Titre : logo + infos client + date -->
+    <title>
+        <band height="100">
+            <!-- Logo -->
+            <image>
+                <reportElement x="0" y="0" width="60" height="60" uuid="1a2b3c4d-1111-2222-3333-444455556666"/>
+                <imageExpression><![CDATA[$P{logoPath}]]></imageExpression>
+            </image>
+
+            <!-- Date du jour -->
+            <textField pattern="dd MMMM yyyy">
+                <reportElement x="0" y="65" width="120" height="20" uuid="b4d7a9e4-2f33-4a9d-bc18-3e0f9c42e7e6"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[new java.text.SimpleDateFormat("dd MMMM yyyy", java.util.Locale.FRENCH).format(new java.util.Date())]]></textFieldExpression>
+            </textField>
+
+            <!-- Client -->
+            <textField>
+                <reportElement x="330" y="20" width="225" height="20" uuid="3c4d5e6f-aaaa-bbbb-cccc-ddddeeeeffff"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA["Client : " + $P{clientName}]]></textFieldExpression>
+            </textField>
+
+            <!-- Téléphone -->
+            <textField>
+                <reportElement x="330" y="45" width="225" height="20" uuid="4d5e6f70-1234-5678-9abc-def012345678"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA["Téléphone : " + $P{tel}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <!-- PageHeader : titre FACTURE au-dessus du tableau -->
+    <pageHeader>
+        <band height="40">
+            <staticText>
+                <reportElement x="0" y="0" width="555" height="30" uuid="a1b2c3d4-e5f6-7890-ab12-cdef34567890" style="titleStyle"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[FACTURE]]></text>
+            </staticText>
+        </band>
+    </pageHeader>
+
+    <!-- En-tête du tableau -->
+    <columnHeader>
+        <band height="20">
+            <staticText>
+                <reportElement x="0" y="0" width="150" height="20" uuid="5e6f7081-2345-3456-4567-567890abcdef"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font isBold="true"/>
+                </textElement>
+                <text><![CDATA[Code Produit]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="150" y="0" width="250" height="20" uuid="6f708192-3456-4567-6789-678901234567"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font isBold="true"/>
+                </textElement>
+                <text><![CDATA[Nom Produit]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="400" y="0" width="155" height="20" uuid="708192a3-4567-6789-7890-789012345678"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font isBold="true"/>
+                </textElement>
+                <text><![CDATA[Prix ($)]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <!-- Détail avec alternance de lignes -->
+    <detail>
+        <band height="20">
+            <!-- Rectangle bleu ciel pour lignes paires -->
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="20" uuid="11111111-1111-1111-1111-111111111111" backcolor="#E0F7FA" mode="Opaque">
+                    <printWhenExpression><![CDATA[$V{REPORT_COUNT} % 2 == 0]]></printWhenExpression>
+                </reportElement>
+            </rectangle>
+
+            <!-- Rectangle blanc pour lignes impaires -->
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="20" uuid="22222222-2222-2222-2222-222222222222" backcolor="#FFFFFF" mode="Opaque">
+                    <printWhenExpression><![CDATA[$V{REPORT_COUNT} % 2 != 0]]></printWhenExpression>
+                </reportElement>
+            </rectangle>
+
+            <textField>
+                <reportElement x="0" y="0" width="150" height="20" uuid="33333333-3333-3333-3333-333333333333"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{codeProduct}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="150" y="0" width="250" height="20" uuid="44444444-4444-4444-4444-444444444444"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{name}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="400" y="0" width="155" height="20" uuid="55555555-5555-5555-5555-555555555555"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{price}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+</jasperReport>
