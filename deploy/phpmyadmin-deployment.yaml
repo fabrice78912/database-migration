@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: migration-deployment
+  name: phpmyadmin-deployment
   namespace: dev
   labels:
-    app: migration
+    app: phpmyadmin
 spec:
   strategy:
     type: RollingUpdate
@@ -13,11 +13,11 @@ spec:
       maxUnavailable: 1
   selector:
     matchLabels:
-      app: migration
+      app: phpmyadmin
   template:
     metadata:
       labels:
-        app: migration
+        app: phpmyadmin
     spec:
       affinity:
         podAntiAffinity:
@@ -27,11 +27,11 @@ spec:
                   - key: app
                     operator: In
                     values:
-                      - migration
+                      - phpmyadmin
               topologyKey: "kubernetes.io/hostname"
       containers:
-        - name: migration
-          image: migration-app:v10
+        - name: phpmyadmin
+          image: phpmyadmin/phpmyadmin:latest
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -39,61 +39,50 @@ spec:
               memory: "512Mi"
             limits:
               cpu: "500m"
-              memory: "1Gi"
+              memory: "1.5Gi"
           env:
-            - name: DB_HOST
+            - name: PMA_HOST
               valueFrom:
                 configMapKeyRef:
-                  name: migration-config
-                  key: DB_HOST
-            - name: DB_PORT
+                  name: phpmyadmin-config
+                  key: PMA_HOST
+            - name: PMA_PORT
               valueFrom:
                 configMapKeyRef:
-                  name: migration-config
-                  key: DB_PORT
-            - name: DB_NAME
-              valueFrom:
-                configMapKeyRef:
-                  name: migration-config
-                  key: DB_NAME
-            - name: MARIADB_ROOT_USER
-              valueFrom:
-                secretKeyRef:
-                  name: mariadb-secret
-                  key: MARIADB_ROOT_USER
-            - name: MARIADB_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mariadb-secret
-                  key: MARIADB_ROOT_PASSWORD
+                  name: phpmyadmin-config
+                  key: PMA_PORT
+            - name: TRUST_PROXY_HEADERS     # 🔁 AJOUTÉ pour HTTPS via Ingress
+              value: "1"
+            - name: PMA_ABSOLUTE_URI
+              value: https://phpmyadmin.dev.local/
           ports:
-            - containerPort: 8080
+            - containerPort: 80
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: migration-service
+  name: phpmyadmin-service
   namespace: dev
 spec:
   type: NodePort
   selector:
-    app: migration
+    app: phpmyadmin
   ports:
     - protocol: TCP
-      port: 8080
-      targetPort: 8080
-      nodePort: 30090
+      port: 80
+      targetPort: 80
+      nodePort: 30092
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: migration-hpa           # Nom du HPA
+  name: phpmyadmin-hpa           # Nom du HPA
   namespace: dev               # Namespace où le HPA est créé (ici "dev")
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: migration-deployment  # Le déploiement cible que le HPA va surveiller et scaler
+    name: phpmyadmin-deployment  # Le déploiement cible que le HPA va surveiller et scaler
   minReplicas: 3               # Nombre minimum de pods que Kubernetes doit garder actifs
   maxReplicas: 4               # Nombre maximum de pods que Kubernetes peut créer automatiquement
   metrics:                     # Critères utilisés pour décider de scaler

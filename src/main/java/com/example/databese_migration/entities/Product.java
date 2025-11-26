@@ -11,8 +11,8 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "product")
-@AllArgsConstructor
-@NoArgsConstructor
+//@AllArgsConstructor
+//@NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 //@Data
 //@Getter
@@ -96,6 +96,26 @@ public class Product {
         return Objects.hash(id, codeProduct, name, price, lastModified, isActif);
     }*/
 
+    public Product(Long id, String name, BigDecimal price, LocalDateTime lastModified, Boolean isActif, String codeProduct) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.lastModified = lastModified;
+        this.isActif = isActif;
+        this.codeProduct = codeProduct;
+    }
+
+
+    public Product() {
+    }
+
+    public Boolean getActif() {
+        return isActif;
+    }
+
+    public void setActif(Boolean actif) {
+        isActif = actif;
+    }
 }
 
 
