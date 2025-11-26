@@ -31,4 +31,35 @@ public class AchatProduct {
 
     private Integer quantity;
 
+    public Long getClientId() {
+        return clientId;
+    }
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public LocalDateTime getDateAchat() {
+        return dateAchat;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setClientId(Long clientId) {
+        this.clientId = clientId;
+    }
+
+    public void setProductId(Long productId) {
+        this.productId = productId;
+    }
+
+    public void setDateAchat(LocalDateTime dateAchat) {
+        this.dateAchat = dateAchat;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
 }

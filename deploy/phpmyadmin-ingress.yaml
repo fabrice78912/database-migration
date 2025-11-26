@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: phpmyadmin-ingress
+  namespace: dev
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"          # 🔁 Force automatiquement le HTTPS
+    nginx.ingress.kubernetes.io/secure-backends: "true"       # 🔁 Indique que le backend supporte HTTPS
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"      # 🔁 Le backend (phpMyAdmin) utilise HTTP en interne
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"        # (optionnel) utile pour l'import de gros fichiers SQL
+    nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+    nginx.ingress.kubernetes.io/x-forwarded-prefix: "/"
+spec:
+  tls:
+    - hosts:
+        - phpmyadmin.dev.local
+      secretName: phpmyadmin-tls-secret
+  rules:
+    - host: phpmyadmin.dev.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: phpmyadmin-service
+                port:
+                  number: 80
